@@ -13,44 +13,12 @@ const App = () => {
   const [messageValue, setMessageValue] = useState("");
   /* すべてのwavesを保存する状態変数を定義 */
   const [allWaves, setAllWaves] = useState([]);
-  console.log("currentAccount: ", currentAccount);
   /* デプロイされたコントラクトのアドレスを保持する変数を作成 */
-  const contractAddress = "0x6477fCCC0B6e7d22bF23617999E78Af8d233f6A0";
-  /* コントラクトからすべてのwavesを取得するメソッドを作成 */
+  const contractAddress = "0xeeB8C05A873aCC6F75D376e420ca64Fd4C0EE293";
   /* ABIの内容を参照する変数を作成 */
   const contractABI = abi.abi;
 
-  const getAllWaves = async () => {
-    const { ethereum } = window;
-
-    try {
-      if (ethereum) {
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
-        const wavePortalContract = new ethers.Contract(
-          contractAddress,
-          contractABI,
-          signer
-        );
-        /* コントラクトからgetAllWavesメソッドを呼び出す */
-        const waves = await wavePortalContract.getAllWaves();
-        /* UIに必要なのは、アドレス、タイムスタンプ、メッセージだけなので、以下のように設定 */
-        const wavesCleaned = waves.map((wave) => {
-          return {
-            address: wave.waver,
-            timestamp: new Date(wave.timestamp * 1000),
-            message: wave.message,
-          };
-        });
-        /* React Stateにデータを格納する */
-        setAllWaves(wavesCleaned);
-      } else {
-        console.log("Ethereum object doesn't exist!");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  console.log("currentAccount: ", currentAccount);
 
   /**
    * `emit`されたイベントをフロントエンドに反映させる
@@ -58,14 +26,15 @@ const App = () => {
   useEffect(() => {
     let wavePortalContract;
 
-    const onNewWave = (from, timestamp, message) => {
-      console.log("NewWave", from, timestamp, message);
+    const onNewWave = (from, timestamp, message, result) => {
+      console.log("NewWave", from, timestamp, message, result);
       setAllWaves((prevState) => [
         ...prevState,
         {
           address: from,
           timestamp: new Date(timestamp * 1000),
           message: message,
+          result: result
         },
       ]);
     };
@@ -89,6 +58,44 @@ const App = () => {
       }
     };
   }, []);
+
+  /* WEBページがロードされたときにcheckIfWalletIsConnected()を実行 */
+  useEffect(() => {
+    checkIfWalletIsConnected();
+  }, []);
+  
+  const getAllWaves = async () => {
+    const { ethereum } = window;
+
+    try {
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const wavePortalContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          signer
+        );
+        /* コントラクトからgetAllWavesメソッドを呼び出す */
+        const waves = await wavePortalContract.getAllWaves();
+        /* UIに必要なのは、アドレス、タイムスタンプ、メッセージだけなので、以下のように設定 -> 勝敗結果を追加 */
+        const wavesCleaned = waves.map((wave) => {
+          return {
+            address: wave.waver,
+            timestamp: new Date(wave.timestamp * 1000),
+            message: wave.message,
+            result: wave.result,
+          };
+        });
+        /* React Stateにデータを格納する */
+        setAllWaves(wavesCleaned);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   /* window.ethereumにアクセスできることを確認する関数を実装 */
   const checkIfWalletIsConnected = async () => {
@@ -114,6 +121,7 @@ const App = () => {
       console.log(error);
     }
   };
+
   /* connectWalletメソッドを実装 */
   const connectWallet = async () => {
     try {
@@ -182,11 +190,6 @@ const App = () => {
     }
   };
 
-  /* WEBページがロードされたときにcheckIfWalletIsConnected()を実行 */
-  useEffect(() => {
-    checkIfWalletIsConnected();
-  }, []);
-
   return (
     <div className="mainContainer">
       <div className="dataContainer">
@@ -251,6 +254,7 @@ const App = () => {
                   <div>Address: {wave.address}</div>
                   <div>Time: {wave.timestamp.toString()}</div>
                   <div>Message: {wave.message}</div>
+                  <div>Result: {wave.result}</div>
                 </div>
               );
             })}
