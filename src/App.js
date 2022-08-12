@@ -14,7 +14,7 @@ const App = () => {
   /* すべてのwavesを保存する状態変数を定義 */
   const [allWaves, setAllWaves] = useState([]);
   /* デプロイされたコントラクトのアドレスを保持する変数を作成 */
-  const contractAddress = "0xeeB8C05A873aCC6F75D376e420ca64Fd4C0EE293";
+  const contractAddress = "0x77a6C7095659DCDb50A58DBb3464B348Bf859060";
   /* ABIの内容を参照する変数を作成 */
   const contractABI = abi.abi;
 
